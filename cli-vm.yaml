@@ -2,7 +2,6 @@ apiVersion: vmoperator.vmware.com/v1alpha3
 kind: VirtualMachine
 metadata:
   name: cli-vm
-  namespace: dev-r758l
   labels:
     vm-selector: cli-vm
     topology.kubernetes.io/zone: zone1
