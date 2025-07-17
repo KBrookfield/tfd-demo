@@ -1,0 +1,62 @@
+apiVersion: vmoperator.vmware.com/v1alpha3
+kind: VirtualMachine
+metadata:
+  name: cli-vm
+  namespace: dev-r758l
+  labels:
+    vm-selector: cli-vm
+    topology.kubernetes.io/zone: zone1
+spec:
+  className: best-effort-xsmall
+  # Friendly image name: ubuntu-server-22.04-lts-jammy-jellyfish
+  imageName: vmi-a0ec65489a896d382
+  storageClass: vi1-paris-cl01-vsan-storage-policy
+  powerState: PoweredOn
+  network:
+    interfaces:
+      - name: eth0
+        network:
+          name: public
+          kind: SubnetSet
+    hostName: cli-vm
+    domainName: corp.vmbeans.com
+    nameservers:
+      - 192.168.110.10
+    searchDomains:
+      - corp.vmbeans.com
+  bootstrap:
+    cloudInit:
+      cloudConfig:
+        defaultUserEnabled: true
+        ssh_pwauth: true
+        runcmd:
+          - >-
+            #Install VCF CLI
+
+            wget
+            https://packages.broadcom.com/artifactory/vcf-distro/vcf-cli/linux/amd64/v9.0.0/vcf-cli.tar.gz
+
+            tar -xvf vcf-cli.tar.gz
+
+            sudo install vcf-cli-linux_amd64 /usr/local/bin/vcf
+
+            #Install kubectl
+
+            sudo apt install curl
+
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s
+            https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s
+            https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+
+            echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+
+            sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        users:
+          - name: devops
+            passwd:
+              name: cli-vm-bootstrap-secret
+              key: devops-passwd
+            lock_passwd: false
+            sudo: ALL=(ALL) NOPASSWD:ALL
